@@ -3,23 +3,45 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Classroom;
+use App\Models\Enrollment;
+use Illuminate\Support\Facades\Auth;
+
 
 class ClassroomController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
     public function index()
     {
-        //
+        $user = Auth::user();
+
+        if ($user->role == 'teacher') {
+            // If the user is a teacher, show only their classes
+            $classes = Classroom::where('teacher_id', $user->id)->get();
+        } elseif ($user->role == 'student') {
+            // If the user is a student, show the classes they are enrolled in
+            $classes = Classroom::whereHas('enrollments', function($query) use ($user) {
+                $query->where('student_id', $user->id);
+            })->get();
+        } else {
+            // Handle other roles or default case
+            $classes = collect(); // An empty collection
+        }
+
+        return view('classes.classes_home_page', compact('classes'));
     }
+    
+    
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        //
+        return view('classes.create');
     }
 
     /**
@@ -27,17 +49,40 @@ class ClassroomController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        /*
+            Here's a breakdown of why separating them works:
+
+            Validation: The validate method processes only the fields that are part of the request payload. For example, 
+            if teacher_id were included in the validation rules, it would expect it to be part of the request data, 
+            which can lead to issues or security concerns.
+
+            Data Assignment: After validation, you can safely modify or add additional fields like teacher_id. 
+            This ensures that the data being passed to the model for creation is complete and accurate.
+        */
+
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        // Add the authenticated user's ID to the validated data
+        $validatedData['teacher_id'] = Auth::id(); 
+        $validatedData['created_at'] = now(); 
+
+        // Create the classroom
+        Classroom::create($validatedData);
+
+        return redirect()->route('classes.index')->with('success', 'Classroom Created Successfully');
     }
+
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $classroom = Classroom::findOrFail($id);
+        return view('classes.show', compact('classroom'));
     }
-
     /**
      * Show the form for editing the specified resource.
      */
@@ -57,8 +102,12 @@ class ClassroomController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(int $id)
     {
-        //
+        $classroom = Classroom::findOrFail($id);
+        $classroom->delete();
+        return redirect()->route('classes.index')->with('success','classroom deleted succefully');
+
+
     }
 }

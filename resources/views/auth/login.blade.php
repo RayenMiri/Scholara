@@ -32,7 +32,7 @@
             </div>
 
             <div class="flex justify-between items-center">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     {{ __('Login') }}
                 </button>
 

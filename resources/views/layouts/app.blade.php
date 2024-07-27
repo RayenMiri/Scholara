@@ -7,7 +7,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Scholara') }}</title>
+    <title>Scholara</title>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
@@ -29,12 +29,12 @@
 
                 <div class="hidden md:flex space-x-6" id="navbarSupportedContent">
                     <a class="text-gray-700 hover:text-blue-600" href="{{ url('/') }}">Home</a>
-                    <a class="text-gray-700 hover:text-blue-600" href="{{ url('/classes') }}">Classes</a>
+                    <a class="text-gray-700 hover:text-blue-600" href="{{ Route('classes.index') }}">Classes</a>
                     <a class="text-gray-700 hover:text-blue-600" href="{{ url('/assignments') }}">Assignments</a>
                     <a class="text-gray-700 hover:text-blue-600" href="{{ url('/grades') }}">Grades</a>
                     <a class="text-gray-700 hover:text-blue-600" href="{{ url('/calendar') }}">Calendar</a>
                     <a class="text-gray-700 hover:text-blue-600" href="{{ url('/students') }}">Students</a>
-                    <a class="text-gray-700 hover:text-blue-600" href="{{ url('/profile') }}">User Profile</a>
+                    
 
                     <div class="flex items-center space-x-4">
                         
