@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Classroom;
 use App\Models\Enrollment;
+use App\Models\Post;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -18,17 +19,16 @@ class ClassroomController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role == 'teacher') {
-            // If the user is a teacher, show only their classes
-            $classes = Classroom::where('teacher_id', $user->id)->get();
-        } elseif ($user->role == 'student') {
-            // If the user is a student, show the classes they are enrolled in
-            $classes = Classroom::whereHas('enrollments', function($query) use ($user) {
-                $query->where('student_id', $user->id);
-            })->get();
-        } else {
-            // Handle other roles or default case
-            $classes = collect(); // An empty collection
+        if($user != null){
+            if ($user->role == 'teacher') {
+                // If the user is a teacher, show only their classes
+                $classes = Classroom::where('teacher_id', $user->id)->get();
+            } elseif ($user->role == 'student') {
+                // If the user is a student, show the classes they are enrolled in
+                $classes = Classroom::whereHas('enrollments', function($query) use ($user) {
+                    $query->where('student_id', $user->id);
+                })->get();
+            } 
         }
 
         return view('classes.classes_home_page', compact('classes'));
@@ -80,8 +80,12 @@ class ClassroomController extends Controller
      */
     public function show($id)
     {
-        $classroom = Classroom::findOrFail($id);
-        return view('classes.show', compact('classroom'));
+        $classroom = Classroom::with('teacher', 'students')->findOrFail($id);
+        // Assuming you have a relationship `assignments` in your Classroom model
+        $assignments = $classroom->assignments ?? []; // Replace with actual data
+        $posts = Post::where('classroom_id', $id)->get();
+        
+        return view('classes.show', compact('classroom', 'assignments','posts'));
     }
     /**
      * Show the form for editing the specified resource.

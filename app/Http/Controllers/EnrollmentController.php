@@ -10,6 +10,23 @@ use Illuminate\Support\Facades\Auth;
 class EnrollmentController extends Controller
 {
 
+    /** 
+     * show all students enrolled in a classroom
+    */
+    public function show_enrolled_students(string $id){
+
+        $enrollment = Enrollment::findOrFail($id);
+
+        if($enrollment){
+            $enrollment->delete();
+            return redirect()->route('classes.show')->with('success','Student deleted succesfully');
+        }else{
+            return redirect()->route('classes.show')->with('error','Something went wrong');
+        }
+
+    }
+
+
     /**
      * a student joins a classroom
      */
@@ -41,6 +58,20 @@ class EnrollmentController extends Controller
         ]);
         
         return redirect()->route('classes.index')->with('success','You have enrolled to the classroom successfully');
+    }
+
+    /**
+     * Delete student from a classroom.
+     */
+    public function delete_student_from_classroom(Request $request , string $id)
+    { 
+        
+        if(!$user){
+            return redirect()->route('classes.index')->with('error','Something went wrong may be the user does not exist');
+
+        }else{
+            
+        }
     }
 
     /**
