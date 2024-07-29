@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\UserContro;
 
 // Landing Page Route
 Route::get('/', function () {
@@ -12,6 +13,10 @@ Route::get('/', function () {
 
 // Auth Routes
 Auth::routes();
+
+//User Routes
+Route::get('/users/{id}', [UserController::class, 'show']);
+
 
 // Home Page Route
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

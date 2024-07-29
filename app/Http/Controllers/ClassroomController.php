@@ -83,7 +83,7 @@ class ClassroomController extends Controller
         $classroom = Classroom::with('teacher', 'students')->findOrFail($id);
         // Assuming you have a relationship `assignments` in your Classroom model
         $assignments = $classroom->assignments ?? []; // Replace with actual data
-        $posts = Post::where('classroom_id', $id)->get();
+        $posts = Post::where('classroom_id', $id)->with('user')->get();
         
         return view('classes.show', compact('classroom', 'assignments','posts'));
     }

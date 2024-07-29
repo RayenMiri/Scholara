@@ -51,16 +51,33 @@
 
             <!-- Existing Posts -->
             <div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Posts</h3>
-                <ul class="space-y-4">
-                    @foreach($posts as $post)
-                        <li class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow-md">
-                            <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{{ $post->title }}</h4>
-                            <p class="text-gray-700 dark:text-gray-300">{{ $post->content }}</p>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Posts</h3>
+            <ul class="space-y-4">
+                @foreach($posts as $post)
+                    <li class="bg-gray-200 dark:bg-gray-700 p-6 rounded-lg shadow-md relative transition-transform duration-300 transform hover:scale-105">
+                        <!-- User Info -->
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-3">
+                                <span class="text-lg font-bold">{{ strtoupper(substr($post->user->name, 0, 1)) }}</span>
+                            </div>
+                            <div>
+                                <span class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ $post->user->name }}</span>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ $post->created_at->format('M d, Y \a\t h:i A') }}</p>
+                            </div>
+                        </div>
+                        <!-- Post Content -->
+                        <h4 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{{ $post->title }}</h4>
+                        <p class="text-gray-700 dark:text-gray-300 mb-4">{{ $post->content }}</p>
+                        <!-- Optional: Post Actions -->
+                        <div class="flex justify-end space-x-2">
+                            <button class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300">Like</button>
+                            <button class="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-green-600 transition duration-300">Comment</button>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+
         </div>
 
         <!-- Assignment List (Right) -->
