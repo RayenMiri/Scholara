@@ -68,9 +68,20 @@
                         <!-- Post Content -->
                         <h4 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{{ $post->title }}</h4>
                         <p class="text-gray-700 dark:text-gray-300 mb-4">{{ $post->content }}</p>
-                        <!-- Optional: Post Actions -->
+                        <!-- Post Actions -->
                         <div class="flex justify-end space-x-2">
-                            <button class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300">Like</button>
+                        <!-- Like Button-->   
+                            @csrf                      
+                            <button onclick="like_post({{ $post->id }})" class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300">
+                                <span id="likes-count-{{ $post->id }}" class="flex items-center space-x-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hand-thumbs-up-fill" viewBox="0 0 16 16">
+                                        <path d="M6.956 1.745C7.021.81 7.908.087 8.864.325l.261.066c.463.116.874.456 1.012.965.22.816.533 2.511.062 4.51a10 10 0 0 1 .443-.051c.713-.065 1.669-.072 2.516.21.518.173.994.681 1.2 1.273.184.532.16 1.162-.234 1.733q.086.18.138.363c.077.27.113.567.113.856s-.036.586-.113.856c-.039.135-.09.273-.16.404.169.387.107.819-.003 1.148a3.2 3.2 0 0 1-.488.901c.054.152.076.312.076.465 0 .305-.089.625-.253.912C13.1 15.522 12.437 16 11.5 16H8c-.605 0-1.07-.081-1.466-.218a4.8 4.8 0 0 1-.97-.484l-.048-.03c-.504-.307-.999-.609-2.068-.722C2.682 14.464 2 13.846 2 13V9c0-.85.685-1.432 1.357-1.615.849-.232 1.574-.787 2.132-1.41.56-.627.914-1.28 1.039-1.639.199-.575.356-1.539.428-2.59z"/>
+                                    </svg>
+                                    <span>{{ $post->likes_count }}</span>
+                                </span>
+                            </button>
+             
+                        <!-- Comment Button--> 
                             <button class="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-green-600 transition duration-300">Comment</button>
                         </div>
                     </li>
@@ -98,3 +109,37 @@
     </div>
 </div>
 @endsection
+
+
+<script>
+
+function like_post(post_id) {
+    fetch(`/posts/${post_id}/like`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            const likes_count_span = document.getElementById(`likes-count-${post_id}`);
+            likes_count_span.querySelector('span').textContent = data.likes_count; 
+           
+        } else {
+            console.error('Error:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+    });
+}
+
+
+</script>

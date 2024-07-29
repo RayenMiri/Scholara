@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
+use App\Models\Like;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -23,11 +24,30 @@ class PostController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * add a like to a post.
      */
-    public function create()
+    public function add_like($post_id)
     {
-        //
+        $post = Post::findOrFail($post_id);
+        $user_id = Auth::id();
+        if($post){
+            $like = Like::where('user_id',$user_id)->where('post_id',$post_id)->first();
+            if($like){
+                $like->delete();
+                $post->likes_count -= 1;
+                $post->save();
+            }else{
+                Like::create([
+                    'user_id' => $user_id,
+                    'post_id' => $post_id,
+                    'is_like' => true,
+                ]);
+                $post->likes_count+=1;
+                $post->save();
+            }
+            
+        }
+        return response()->json(['success' => true, 'likes_count' => $post->likes_count]);
     }
 
     /**

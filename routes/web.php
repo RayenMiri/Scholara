@@ -4,7 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\PostController;
-use App\Http\Controllers\UserContro;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\LikeController;
 
 // Landing Page Route
 Route::get('/', function () {
@@ -33,3 +34,4 @@ Route::post('/enrollement/join',[EnrollmentController::class,'join'])->name('enr
 
 //Posts Routes
 Route::post('/posts',[PostController::class,'store'])->middleware('auth')->name('posts.store');
+Route::post('/posts/{post_id}/like', [PostController::class, 'add_like'])->middleware('auth')->name('posts.add_like');
