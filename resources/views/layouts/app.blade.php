@@ -28,7 +28,7 @@
                 </div>
 
                 <div class="hidden md:flex space-x-6" id="navbarSupportedContent">
-                    <a class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400" href="{{ url('/') }}">Home</a>
+                    <a class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400" href="{{ url('/home') }}">Home</a>
                     <a class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400" href="{{ Route('classes.index') }}">Classes</a>
                     <a class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400" href="{{ url('/assignments') }}">Assignments</a>
                     <a class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400" href="{{ url('/grades') }}">Grades</a>

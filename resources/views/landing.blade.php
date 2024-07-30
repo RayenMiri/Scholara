@@ -20,7 +20,7 @@
             </a>
         </div>
         <div class="space-x-6">
-            <a class="text-gray-700 hover:text-blue-600" href="{{ url('/') }}">Home</a>
+            <a class="text-gray-700 hover:text-blue-600" href="{{ url('/home') }}">Home</a>
             <a class="text-gray-700 hover:text-blue-600" href="{{ url('/contact') }}">Contact </a>
             <a class="text-gray-700 hover:text-blue-600" href="{{ url('/element two') }}">Feedback</a>
             <a class="text-gray-700 hover:text-blue-600" href="{{ url('/element three') }}">Why Scholara ?</a>

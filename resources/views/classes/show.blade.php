@@ -38,10 +38,10 @@
                     @csrf
                     <div>
                         <input type="hidden" name="classroom_id" value="{{ $classroom->id }}" />
-                        <input type="text" name="title" placeholder="Title" class="form-input w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-gray-100" />
+                        <input type="text" name="title" required placeholder="Title" class="form-input w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-gray-100" />
                     </div>
                     <div>
-                        <textarea name="content" placeholder="Content" rows="4" class="form-input w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-gray-100"></textarea>
+                        <textarea name="content" required placeholder="Content" rows="4" class="form-input w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-gray-100"></textarea>
                     </div>
                     <button type="submit" class="bg-blue-600 dark:bg-blue-700 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition duration-300">
                         Post
@@ -53,6 +53,10 @@
             <div>
             <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Posts</h3>
             <ul class="space-y-4">
+                @if(count($posts) == 0)
+                    <p class="text-[14px]">It's all quiet now. Be the first one who shares a post!</p>
+                    <img src="/img/no_posts_illus.png" alt="no_posts_illus" class="">
+                @endif
                 @foreach($posts as $post)
                     <li class="bg-gray-200 dark:bg-gray-700 p-6 rounded-lg shadow-md relative transition-transform duration-300 transform hover:scale-105">
                         <!-- User Info -->
@@ -69,9 +73,10 @@
                         <h4 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{{ $post->title }}</h4>
                         <p class="text-gray-700 dark:text-gray-300 mb-4">{{ $post->content }}</p>
                         <!-- Post Actions -->
-                        <div class="flex justify-end space-x-2">
-                        <!-- Like Button-->   
-                            @csrf                      
+                        <div class="flex justify-between items-center">
+                            <button onclick="toggleComments({{ $post->id }})" class="bg-gray-500 text-white py-1 px-3 rounded-lg hover:bg-gray-600 transition duration-300">
+                                Comments ({{ $post->comments->count() }})
+                            </button>
                             <button onclick="like_post({{ $post->id }})" class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300">
                                 <span id="likes-count-{{ $post->id }}" class="flex items-center space-x-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hand-thumbs-up-fill" viewBox="0 0 16 16">
@@ -80,39 +85,68 @@
                                     <span>{{ $post->likes_count }}</span>
                                 </span>
                             </button>
-             
-                        <!-- Comment Button--> 
-                            <button class="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-green-600 transition duration-300">Comment</button>
                         </div>
+
+                        <!-- Comment Input and Button -->
+                        <div id="comments-section-{{ $post->id }}" class="mt-4 hidden">
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Comments</h5>
+                            <ul id="comment-list-{{ $post->id }}" class="space-y-2">
+                                @foreach ($post->comments as $comment)
+                                    <li class="bg-gray-300 dark:bg-gray-600 p-4 rounded-md">
+                                        <div class="flex items-center mb-2">
+                                            <div class="w-8 h-8 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-2">
+                                                <span class="text-sm font-bold">{{ strtoupper(substr($comment->user->name, 0, 1)) }}</span>
+                                            </div>
+                                            <span class="text-gray-800 dark:text-gray-200">{{ $comment->user->name }}</span>
+                                        </div>
+                                        <div class="">
+                                
+                                        </div>
+                                        <p class="text-gray-700 dark:text-gray-300">{{ $comment->content }}</p>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            <div class="flex items-center space-x-2 mt-4">
+                                <input id="comment-input-{{ $post->id }}" type="text" placeholder="Add a comment..." class="form-input w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-gray-100" />
+                                <button onclick="postComment({{ $post->id }})" class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300">Comment</button>
+                            </div>
+                        </div>
+
                     </li>
                 @endforeach
             </ul>
         </div>
+    </div>
 
-        </div>
-
-        <!-- Assignment List (Right) -->
+        <!-- Courses List (Right) -->
         <div class="w-1/4 bg-gray-200 dark:bg-gray-700 p-4 rounded-lg">
-            <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Assignments</h3>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Courses</h3>
             <ul class="space-y-2">
-                @forelse ($assignments as $assignment)
-                    <li class="text-gray-700 dark:text-gray-300">{{ $assignment->title }}</li>
+                @forelse ($classroom->courses as $course)
+                    <li class="flex items-center space-x-3 bg-gray-100 dark:bg-gray-600 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 transition duration-300">
+                        <span class="text-gray-700 dark:text-gray-300">{{ $course->name }}</span>
+                    </li>
                 @empty
-                    <li class="text-gray-700 dark:text-gray-300">No assignments yet.</li>
+                    <li class="text-gray-700 dark:text-gray-300">No courses available.</li>
                 @endforelse
-                <!-- Dummy assignments for now -->
-                @for ($i = 1; $i <= 5; $i++)
-                    <li class="text-gray-700 dark:text-gray-300">Dummy Assignment {{ $i }}</li>
-                @endfor
             </ul>
         </div>
     </div>
 </div>
 @endsection
-
-
 <script>
 
+//toggle comments section
+function toggleComments(postId) {
+    var commentsSection = document.getElementById('comments-section-' + postId);
+    if (commentsSection.classList.contains('hidden')) {
+        commentsSection.classList.remove('hidden');
+    } else {
+        commentsSection.classList.add('hidden');
+    }
+}
+
+//like a post 
 function like_post(post_id) {
     fetch(`/posts/${post_id}/like`, {
         method: 'POST',
@@ -141,5 +175,53 @@ function like_post(post_id) {
     });
 }
 
+//submit a comment
+function postComment(postId) {
+    const commentInput = document.getElementById(`comment-input-${postId}`);
+    const commentContent = commentInput.value.trim();
+    if (commentContent === '') return; // Ignore empty comments
+
+    fetch(`/posts/${postId}/comment`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ content: commentContent })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Append new comment to the list
+            const commentList = document.getElementById(`comment-list-${postId}`);
+            const newComment = document.createElement('li');
+            newComment.classList.add('bg-gray-300', 'dark:bg-gray-600', 'p-4', 'rounded-md');
+            newComment.innerHTML = `
+                <div class="flex items-center mb-2">
+                    <div class="w-8 h-8 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-2">
+                        <span class="text-sm font-bold">${data.comment.user_initial}</span>
+                    </div>
+                    <span class="text-gray-800 dark:text-gray-200">${data.comment.user_name}</span>
+                </div>
+                <p class="text-gray-700 dark:text-gray-300">${data.comment.content}</p>
+            `;
+            commentList.appendChild(newComment);
+
+            // Clear input field
+            commentInput.value = '';
+        } else {
+            console.error('Error:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+    });
+}
 
 </script>
+
