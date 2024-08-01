@@ -74,8 +74,9 @@
                         <p class="text-gray-700 dark:text-gray-300 mb-4">{{ $post->content }}</p>
                         <!-- Post Actions -->
                         <div class="flex justify-between items-center">
-                            <button onclick="toggleComments({{ $post->id }})" class="bg-gray-500 text-white py-1 px-3 rounded-lg hover:bg-gray-600 transition duration-300">
-                                Comments ({{ $post->comments->count() }})
+                            <button onclick="toggleComments({{ $post->id }})" class="bg-gray-500 text-white py-1 px-3 rounded-lg hover:bg-gray-600 transition duration-300" >
+                            Comments (<span id="comments-count-{{$post->id}}">{{ $post->comments->count() }}</span>)
+
                             </button>
                             <button onclick="like_post({{ $post->id }})" class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300">
                                 <span id="likes-count-{{ $post->id }}" class="flex items-center space-x-2">
@@ -92,15 +93,29 @@
                             <h5 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Comments</h5>
                             <ul id="comment-list-{{ $post->id }}" class="space-y-2">
                                 @foreach ($post->comments as $comment)
-                                    <li class="bg-gray-300 dark:bg-gray-600 p-4 rounded-md">
-                                        <div class="flex items-center mb-2">
-                                            <div class="w-8 h-8 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-2">
-                                                <span class="text-sm font-bold">{{ strtoupper(substr($comment->user->name, 0, 1)) }}</span>
+                                    <li class="bg-gray-300 dark:bg-gray-600 p-4 rounded-md" id="{{$comment->id}}">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-2">
+                                                    <span class="text-sm font-bold">{{ strtoupper(substr($comment->user->name, 0, 1)) }}</span>
+                                                </div>
+                                                <span class="text-gray-800 dark:text-gray-200">{{ $comment->user->name }}</span>
                                             </div>
-                                            <span class="text-gray-800 dark:text-gray-200">{{ $comment->user->name }}</span>
-                                        </div>
-                                        <div class="">
-                                
+                                            @if($comment->user_id == Auth::id())
+                                            <div class="relative">
+                                                <button onclick="toggle_comment_action({{ $comment->id }})" class="text-gray-600 dark:text-gray-200">
+                                                    &#x22EE;
+                                                </button>
+                                                <div id="comment-actions-{{ $comment->id }}" class="hidden absolute right-0 mt-2 w-48 bg-gray dark:bg-gray-700 rounded-md shadow-lg z-20">
+                                                    <button onclick="edit_comment({{ $comment->id }})" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        Edit
+                                                    </button>
+                                                    <button onclick="delete_comment({{ $comment->id }}, {{ $post->id }})" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            @endif
                                         </div>
                                         <p class="text-gray-700 dark:text-gray-300">{{ $comment->content }}</p>
                                     </li>
@@ -111,7 +126,6 @@
                                 <button onclick="postComment({{ $post->id }})" class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300">Comment</button>
                             </div>
                         </div>
-
                     </li>
                 @endforeach
             </ul>
@@ -141,10 +155,60 @@ function toggleComments(postId) {
     var commentsSection = document.getElementById('comments-section-' + postId);
     if (commentsSection.classList.contains('hidden')) {
         commentsSection.classList.remove('hidden');
+        
     } else {
         commentsSection.classList.add('hidden');
     }
 }
+
+//toggle comment actions
+function toggle_comment_action(comment_id){
+    var commentsActions = document.getElementById('comment-actions-'+comment_id);
+    if(commentsActions.classList.contains('hidden')){
+        commentsActions.classList.remove('hidden')
+    }else{
+        commentsActions.classList.add('hidden')
+    }
+}
+
+//edit comment
+function edit_comment(comment_id){
+
+}
+//delete a comment
+function delete_comment(comment_id,post_id){
+    fetch(`/comments/${comment_id}`,{
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+
+    }).then(response=>{
+        if(!response.ok){
+            throw new Error('Network response was not ok' +response.statusText);
+        }
+        return response.json();
+    }).then(data=>{
+        if(data.success){
+            console.log('comment deleted successfully')
+            const deleted_comment_element = document.getElementById(comment_id);
+            deleted_comment_element.remove();
+            if(delete_comment){
+                var comments_count = document.getElementById(`comments-count-${post_id}`);
+                comments_count.innerText = parseInt(comments_count.innerText, 10) - 1;
+
+            }
+        }else{
+            console.log('Error' , data.message)
+        }
+    }).catch(e=>{
+        console.log(e.message);
+    })
+
+    
+}
+
 
 //like a post 
 function like_post(post_id) {
@@ -200,18 +264,36 @@ function postComment(postId) {
             // Append new comment to the list
             const commentList = document.getElementById(`comment-list-${postId}`);
             const newComment = document.createElement('li');
+            var comments_count = document.getElementById(`comments-count-${postId}`);
+                comments_count.innerText = parseInt(comments_count.innerText, 10) +1;
             newComment.classList.add('bg-gray-300', 'dark:bg-gray-600', 'p-4', 'rounded-md');
             newComment.innerHTML = `
                 <div class="flex items-center mb-2">
-                    <div class="w-8 h-8 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-2">
+                    <div class="w-6 h-6 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-2">
                         <span class="text-sm font-bold">${data.comment.user_initial}</span>
                     </div>
                     <span class="text-gray-800 dark:text-gray-200">${data.comment.user_name}</span>
                 </div>
+                @if($comment->user_id == Auth::id())
+                                        <div class="relative">
+                                                <button onclick="toggle_comment_action({{ $comment->id }})" class="text-gray-600 dark:text-gray-200">
+                                                    &#x22EE;
+                                                </button>
+                                                <div id="comment-actions-{{ $comment->id }}" class="hidden absolute right-0 mt-2 w-48 bg-gray dark:bg-gray-700 rounded-md shadow-lg z-20">
+                                                    <button onclick="edit_comment({{ $comment->id }})" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        Edit
+                                                    </button>
+                                                    <button onclick="delete_comment({{ $comment->id }}, {{ $post->id }})" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                @endif
                 <p class="text-gray-700 dark:text-gray-300">${data.comment.content}</p>
             `;
             commentList.appendChild(newComment);
-
+                
             // Clear input field
             commentInput.value = '';
         } else {

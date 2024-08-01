@@ -68,7 +68,7 @@ class CommentController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        
     }
 
     /**
@@ -87,7 +87,7 @@ class CommentController extends Controller
         $comment = Comment::findOrFail($comment_id);
         if($comment){
             $comment->delete();
-            return redirect()->json([
+            return response()->json([
                 'success' => true,
             ]);
         }

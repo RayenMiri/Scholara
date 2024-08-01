@@ -36,3 +36,7 @@ Route::post('/enrollement/join',[EnrollmentController::class,'join'])->name('enr
 Route::post('/posts',[PostController::class,'store'])->middleware('auth')->name('posts.store');
 Route::post('/posts/{post_id}/like', [PostController::class, 'add_like'])->middleware('auth')->name('posts.add_like');
 Route::post('/posts/{post}/comment', [CommentController::class, 'comment'])->name('posts.comment');
+
+
+//Comment Routes
+Route::delete('/comments/{comment_id}',[CommentController::class,'destroy'])->middleware('auth')->name('comment.delete');
