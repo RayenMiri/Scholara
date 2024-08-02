@@ -18,6 +18,7 @@ class Course extends Model
         'title',
         'classroom_id',
         'teacher_id',
+        'file_path',
     ];
 
     /**

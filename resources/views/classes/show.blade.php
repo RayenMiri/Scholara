@@ -131,25 +131,122 @@
             </ul>
         </div>
     </div>
-
+      
         <!-- Courses List (Right) -->
         <div class="w-1/4 bg-gray-200 dark:bg-gray-700 p-4 rounded-lg">
             <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Courses</h3>
-            <ul class="space-y-2">
+            <div class="mt-4">
+                <form id="add-course-form" onsubmit="add_course(event)">
+                    <input id="course-title" name="title" type="text" placeholder="Add a new course" class="form-input w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-gray-100 mb-2" />
+                    <input id="course-file" name="file" type="file" class="form-input w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 dark:bg-gray-700 dark:text-gray-100 mb-2" />
+                    <input type="hidden" id="classroom-id" name="classroom_id" value="{{ $classroom->id }}">
+                    <button class="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300 w-full">Add Course</button>
+                </form>
+            </div>
+            <ul class="space-y-2" id="courses-list">
                 @forelse ($classroom->courses as $course)
-                    <li class="flex items-center space-x-3 bg-gray-100 dark:bg-gray-600 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 transition duration-300">
-                        <span class="text-gray-700 dark:text-gray-300">{{ $course->name }}</span>
+                    <li class="flex items-center justify-between space-x-3 bg-gray-100 dark:bg-gray-600 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 transition duration-300">
+                        <a href="{{ route('courses.show', $course->id) }}" class="text-gray-700 dark:text-gray-300">{{ $course->title }}</a>
+                        @if($classroom->teacher_id == Auth::id())
+                        <button onclick="" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600 transition duration-300">Delete</button>
+                        @endif
                     </li>
                 @empty
                     <li class="text-gray-700 dark:text-gray-300">No courses available.</li>
+                    <img src="/img/no_courses.png" alt="no_courses" class="">
                 @endforelse
             </ul>
+            
         </div>
+
     </div>
 </div>
 @endsection
-<script>
 
+
+<script>
+//add a course
+async function add_course(event) {
+        event.preventDefault();
+
+        var form = document.getElementById('add-course-form');
+        var formData = new FormData(form);
+
+        // Log the form data to check if they are correct
+        for (var pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        // Perform client-side validation
+        var title = formData.get('title');
+        var file = formData.get('file');
+        var classroom_id = formData.get('classroom_id');
+
+        if (!title || !file || !classroom_id) {
+            console.error('All fields are required.');
+            return;
+        }
+
+        if (!file.name.match(/\.(pdf|doc|docx|zip)$/)) {
+            console.error('Invalid file type. Only PDF, DOC, DOCX, and ZIP files are allowed.');
+            return;
+        }
+
+        // If the data are correct, proceed with the fetch request
+        try {
+            let response = await fetch('/courses/add-course', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+
+            if (!response.ok) {
+                // If the response is not ok, log the status text
+                throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+            }
+
+            let data = await response.json();
+
+            if (data.success) {
+                console.log('Course added successfully:', data.course);
+                const courses_list = document.getElementById('courses-list');
+                const new_course = document.createElement('li');
+                new_course.className = "flex items-center justify-between space-x-3 bg-gray-100 dark:bg-gray-600 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 transition duration-300"
+                new_course.innerHTML = `
+                     <span class="text-gray-700 dark:text-gray-300">${data.course.title}</span>
+                        @if($classroom->teacher_id == Auth::id())
+                        <button onclick="" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-600 transition duration-300">Delete</button>
+                        @endif
+                `;
+                courses_list.appendChild(new_course);
+            } else {
+                console.error('Error adding course:', data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+//delete a course
+function deleteCourse(courseId) {
+    fetch('/courses/delete-course/' + courseId, {
+        method: 'DELETE',
+        headers: {
+           'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Course deleted successfully');
+            // Optionally, update the UI to remove the deleted course
+        } else {
+            console.error('Error deleting course:', data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
 //toggle comments section
 function toggleComments(postId) {
     var commentsSection = document.getElementById('comments-section-' + postId);
@@ -268,29 +365,32 @@ function postComment(postId) {
                 comments_count.innerText = parseInt(comments_count.innerText, 10) +1;
             newComment.classList.add('bg-gray-300', 'dark:bg-gray-600', 'p-4', 'rounded-md');
             newComment.innerHTML = `
-                <div class="flex items-center mb-2">
-                    <div class="w-6 h-6 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-2">
-                        <span class="text-sm font-bold">${data.comment.user_initial}</span>
-                    </div>
-                    <span class="text-gray-800 dark:text-gray-200">${data.comment.user_name}</span>
-                </div>
-                @if($comment->user_id == Auth::id())
-                                        <div class="relative">
-                                                <button onclick="toggle_comment_action({{ $comment->id }})" class="text-gray-600 dark:text-gray-200">
-                                                    &#x22EE;
-                                                </button>
-                                                <div id="comment-actions-{{ $comment->id }}" class="hidden absolute right-0 mt-2 w-48 bg-gray dark:bg-gray-700 rounded-md shadow-lg z-20">
-                                                    <button onclick="edit_comment({{ $comment->id }})" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                                                        Edit
-                                                    </button>
-                                                    <button onclick="delete_comment({{ $comment->id }}, {{ $post->id }})" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            
-                @endif
-                <p class="text-gray-700 dark:text-gray-300">${data.comment.content}</p>
+                
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center text-gray-800 dark:text-gray-100 mr-2">
+                                    <span class="text-sm font-bold">{{ strtoupper(substr($comment->user->name, 0, 1)) }}</span>
+                                </div>
+                                <span class="text-gray-800 dark:text-gray-200">{{ $comment->user->name }}</span>
+                            </div>
+                            @if($comment->user_id == Auth::id())
+                            <div class="relative">
+                                <button onclick="toggle_comment_action({{ $comment->id }})" class="text-gray-600 dark:text-gray-200">
+                                    &#x22EE;
+                                </button>
+                                <div id="comment-actions-{{ $comment->id }}" class="hidden absolute right-0 mt-2 w-48 bg-gray dark:bg-gray-700 rounded-md shadow-lg z-20">
+                                    <button onclick="edit_comment({{ $comment->id }})" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                        Edit
+                                    </button>
+                                    <button onclick="delete_comment({{ $comment->id }}, {{ $post->id }})" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300">{{ $comment->content }}</p>
+                                    
             `;
             commentList.appendChild(newComment);
                 
